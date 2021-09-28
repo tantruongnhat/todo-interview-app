@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:todo_interview/controller/home.dart';
+import 'package:todo_interview/models/status_enum.dart';
 import 'package:todo_interview/models/todo_item.dart';
 
 enum TabType {
@@ -32,61 +33,52 @@ class _TodoListViewState extends State<TodoListView> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildView();
+    final listVIew = _buildContentView();
+    return Container(child: listVIew);
   }
 
-  Widget _buildView() {
-    final listVIew = _buildList();
-    switch (widget.tabType) {
-      case TabType.all:
-        return Container(color: Colors.blue, child: listVIew);
-      case TabType.complete:
-        return Container(color: Colors.red, child: _buildList());
-      case TabType.inComplete:
-        return Container(
-          color: Colors.yellow,
-          child: _buildList(),
-        );
-    }
-  }
-
-  _buildList() {
+  _buildContentView() {
     return Obx(
-      () => ListView.builder(
-        itemBuilder: (context, index) => Slidable(
-          key: Key(listItem[index].id.toString()), //set key
-
-          actionPane: const SlidableDrawerActionPane(),
-          secondaryActions: [
-            //action button to show in head
-            ElevatedButton(
-              child: const Icon(Icons.delete),
-              onPressed: () {
-                //action for phone call
-              },
-            ),
-            //add more action buttons here
-          ],
-          child: Card(
-            key: ValueKey(listItem[index].id.toString()),
-            child: ListTile(
-                title: Text(listItem[index].title),
-                subtitle: Text(listItem[index].description),
-                trailing: Checkbox(
-                  value: getCheckBoxValue(listItem[index].status),
-                  onChanged: (bool? value) {
-                    controller.changeTodoItemStatus(listItem[index], value ?? false);
-                  },
-                )),
-          ),
-        ),
-        itemCount: listItem.length,
-      ),
+      () => _buildListView(),
     );
   }
 
-  getCheckBoxValue(int status) {
-    if (status == 1) return true;
+  _buildListView() {
+    if(listItem.isEmpty) {
+      return const Center(
+        child: Icon(
+          Icons.hourglass_empty,
+          size: 50,
+        ),
+      );
+    } else {
+      return ListView.builder(
+        itemBuilder: (context, index) => Slidable(
+          key: Key(listItem[index].key.toString()), //set key
+          actionPane: const SlidableDrawerActionPane(),
+
+          child: Card(
+            key: ValueKey(listItem[index].key.toString()),
+            child: ListTile(
+              title: Text(listItem[index].title),
+              subtitle: Text(listItem[index].description),
+              trailing: Checkbox(
+                value: _getCheckBoxValue(listItem[index].statusEnum),
+                onChanged: (bool? value) {
+                  controller.changeTodoItemStatus(
+                      listItem[index], value ?? false);
+                },
+              ),
+            ),
+          ),
+        ),
+        itemCount: listItem.length,
+      );
+    }
+  }
+
+  _getCheckBoxValue(TodoStatus status) {
+    if (status == TodoStatus.complete) return true;
     return false;
   }
 }

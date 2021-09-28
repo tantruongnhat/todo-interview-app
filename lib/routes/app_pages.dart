@@ -13,6 +13,5 @@ class AppPages {
       page: () => HomePage(),
       binding: HomeBinding(),
     ),
-
   ];
 }

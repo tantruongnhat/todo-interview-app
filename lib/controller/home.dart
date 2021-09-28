@@ -1,8 +1,15 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:todo_interview/models/status_enum.dart';
 import 'package:todo_interview/models/todo_item.dart';
+import 'package:todo_interview/usecases/todo.dart';
 import 'package:todo_interview/view/todo_list_view.dart';
 
 class HomePageController extends GetxController {
+  final ToDoUseCase toDoUseCase;
+
+  HomePageController(this.toDoUseCase);
+
   var tabIndex = 0.obs;
 
   final dataAllList = <TodoModel>[].obs;
@@ -14,28 +21,10 @@ class HomePageController extends GetxController {
   }
 
   @override
-  void onInit() {
-    super.onInit();
-    dataAllList(dummyData());
-    dataCompleteList(dataAllList.value.where((element) => element.status ==2).toList());
-    dataInCompleteList(dataAllList.value.where((element) => element.status !=2).toList());
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  List<TodoModel> dummyData() {
-    return List.generate(
-        10,
-        (index) => TodoModel(
-            id: index,
-            title: "$index",
-            description: "description",
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-            status: 0));
+  void onReady() async {
+    super.onReady();
+    await _checkEmptyListAndCreateData();
+    _loadTodoList();
   }
 
   List<TodoModel> getListData(TabType tabType) {
@@ -49,41 +38,52 @@ class HomePageController extends GetxController {
     }
   }
 
-  void changeTodoItemStatus(TodoModel listItem, bool isCheck) {
-    int index = dataAllList.indexWhere((element) => element.id == listItem.id);
-    if (index != -1) dataAllList[index] = listItem..status = isCheck ? 1 : 0;
-    dataAllList(dataAllList.value);
-    dataCompleteList(dataAllList.value.where((element) => element.status == 1).toList());
-    dataInCompleteList(dataAllList.value.where((element) => element.status != 1).toList());
-    // if (isCheck) {
-    //   int indexComplete =
-    //       dataCompleteList.indexWhere((element) => element.id == listItem.id);
-    //   if (indexComplete == -1) {
-    //     dataCompleteList.add(listItem..status = isCheck ? 2 : 1);
-    //     dataCompleteList(dataCompleteList.value);
-    //   }
-    //
-    //   int indexInComplete =
-    //   dataInCompleteList.indexWhere((element) => element.id == listItem.id);
-    //   if (indexInComplete != -1) {
-    //     dataInCompleteList.removeAt(indexInComplete);
-    //     dataInCompleteList(dataInCompleteList.value);
-    //   }
-    //
-    // } else {
-    //   int indexComplete =
-    //   dataCompleteList.indexWhere((element) => element.id == listItem.id);
-    //   if (indexComplete != -1) {
-    //     dataCompleteList.removeAt(indexComplete);
-    //     dataCompleteList(dataInCompleteList.value);
-    //   }
-    //
-    //   int indexInComplete =
-    //   dataInCompleteList.indexWhere((element) => element.id == listItem.id);
-    //   if (indexInComplete == -1) {
-    //     dataCompleteList.add(listItem..status = isCheck ? 1 : 2);
-    //     dataCompleteList(dataCompleteList.value);
-    //   }
-    // }
+  void changeTodoItemStatus(TodoModel todoModel, bool isCheck) async {
+    final int status =
+        isCheck ? TodoStatus.complete.value : TodoStatus.inComplete.value;
+    await toDoUseCase.changeTodoItemStatus(todoModel, status);
+    _loadTodoList();
+  }
+
+  _loadTodoList() async {
+    _loadTodoAll();
+    _loadTodoInComplete();
+    _loadTodoComplete();
+  }
+
+  _loadTodoAll() async {
+    final res = await toDoUseCase.getTodoItems();
+    res?.fold((l) {
+      Get.snackbar("Error", l.toString(),
+          backgroundColor: Colors.red, snackPosition: SnackPosition.BOTTOM);
+    }, (r) {
+      dataAllList(r);
+    });
+  }
+
+  _loadTodoInComplete() async {
+    final res = await toDoUseCase.getTodoItemInComplete();
+    res?.fold((l) {
+      Get.snackbar("Error", l.toString(),
+          backgroundColor: Colors.red, snackPosition: SnackPosition.BOTTOM);
+    }, (r) {
+      dataInCompleteList(r);
+    });
+  }
+
+  _loadTodoComplete() async {
+    final res = await toDoUseCase.getTodoItemComplete();
+    res?.fold((l) {
+      Get.snackbar("Error", l.toString(),
+          backgroundColor: Colors.red, snackPosition: SnackPosition.BOTTOM);
+    }, (r) {
+      dataCompleteList(r);
+    });
+  }
+
+  _checkEmptyListAndCreateData() async {
+    final res = await toDoUseCase.getTodoItems();
+    final list = res?.getOrElse(() => []);
+    if (list == null || list.isEmpty) await toDoUseCase.dummyData();
   }
 }

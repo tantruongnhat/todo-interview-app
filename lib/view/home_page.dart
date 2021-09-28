@@ -22,18 +22,20 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(),
-        bottomNavigationBar: buildBottomNavigationMenu(context, controller),
-        body: Obx(
-          () => IndexedStack(
-            index: controller.tabIndex.value,
-            children: const [
-              TodoListView(TabType.all),
-              TodoListView(TabType.inComplete),
-              TodoListView(TabType.complete),
-            ],
+    return Material(
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(),
+          bottomNavigationBar: buildBottomNavigationMenu(context, controller),
+          body: Obx(
+            () => IndexedStack(
+              index: controller.tabIndex.value,
+              children: const [
+                TodoListView(TabType.all),
+                TodoListView(TabType.inComplete),
+                TodoListView(TabType.complete),
+              ],
+            ),
           ),
         ),
       ),
