@@ -30,6 +30,8 @@ jobs:
       - run: flutter clean
       - name: get flutter  
         run: flutter pub get
+      - name: test
+        run: flutter test test/feature
       - name: build APK
         run: flutter build apk -v
 
