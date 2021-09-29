@@ -25,7 +25,10 @@ class HomePage extends StatelessWidget {
     return Material(
       child: SafeArea(
         child: Scaffold(
-          appBar: AppBar(),
+          appBar: AppBar(
+            title: const Center(child: Text('TODO'),),
+            backgroundColor: backgroundColorBarItem,
+          ),
           bottomNavigationBar: buildBottomNavigationMenu(context, controller),
           body: Obx(
             () => IndexedStack(
